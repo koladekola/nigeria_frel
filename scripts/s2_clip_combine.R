@@ -9,7 +9,7 @@
 
 time_start  <- Sys.time()
 
-aoi <- paste0(nfi_dir,"eco93.shp")
+aoi <- paste0(eco_dir,"eco93.shp")
 aoi_field <- "ECO93_ID"
 
 ####################################################################################
@@ -21,8 +21,32 @@ system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\
                paste0(gfc_dir,"gfc_treecover2000.tif"),
                paste0(gfc_dir,"gfc_lossyear.tif"),
                paste0(dd_dir,"tmp_gfc_tc_start.tif"),
-               paste0("(A>",gfc_threshold,")*((B==0)+(B>5))*A")
+               paste0("(A>",gfc_threshold,")*((B==0)+(B>5))")
 ))
+
+#################### SIEVE TO THE MMU
+system(sprintf("gdal_sieve.py -st %s %s %s ",
+               mmu,
+               paste0(dd_dir,"tmp_gfc_tc_start.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_start_fsieve.tif")
+))
+
+#################### FIX THE HOLES
+system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
+               paste0(dd_dir,"tmp_gfc_tc_start.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_start_fsieve.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_start_sieve.tif"),
+               paste0("(A>0)*(B>0)*B")
+))
+
+#################### DIFFERENCE BETWEEN SIEVED AND ORIGINAL
+system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
+               paste0(dd_dir,"tmp_gfc_tc_start.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_start_sieve.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_start_inf.tif"),
+               paste0("(A>0)*(A-B)+(A==0)*(B==1)*0")
+))
+
 
 #################### CREATE GFC LOSS MAP AT THRESHOLD between 2006 and 2016
 system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
@@ -89,17 +113,19 @@ system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\
 ))
 
 #################### COMBINATION INTO DD MAP (1==NF, 2==F, 3==Df, 4==Dg, 5==ToF, 6==Dg_TOF)
-system(sprintf("gdal_calc.py -A %s -B %s -C %s -D %s -E %s  --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
+system(sprintf("gdal_calc.py -A %s -B %s -C %s -D %s -E %s -F %s -G %s --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
                paste0(dd_dir,"tmp_gfc_tc_start.tif"),
                paste0(dd_dir,"tmp_gfc_loss_sieve.tif"),
                paste0(dd_dir,"tmp_gfc_loss_inf.tif"),
                paste0(dd_dir,"tmp_gfc_tc_end_sieve.tif"),
                paste0(dd_dir,"tmp_gfc_tc_end_inf.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_start_fsieve.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_start_inf.tif"),
                paste0(dd_dir,"tmp_dd_map.tif"),
                paste0("(A==0)*1+",
                       "(A>0)*((B==0)*(C==0)*((D>0)*2+(E>0)*5)+",
                              "(B>0)*3+",
-                             "(C>0)*((D>0)*4+(E>0)*6))")
+                             "(C>0)*((F>0)*4+(G>0)*6))")
 ))
 
 #############################################################
@@ -140,10 +166,32 @@ system(sprintf("(echo %s) | oft-addpct.py %s %s",
 ################################################################################
 system(sprintf("gdal_translate -ot Byte -co COMPRESS=LZW %s %s",
                paste0(dd_dir,"tmp_dd_map_aoi_pct.tif"),
+               paste0(dd_dir,"tmp_dd_map_aoi_pct_geo.tif")
+))
+
+################################################################################
+#################### REPROJECT in UTM32N
+################################################################################
+system(sprintf("gdalwarp -t_srs EPSG:32632 -overwrite -co COMPRESS=LZW %s %s",
+               paste0(dd_dir,"tmp_dd_map_aoi_pct_geo.tif"),
                paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181206.tif")
 ))
 
+################################################################################
+#################### COMPUTE AREAS
+################################################################################
+system(sprintf("oft-stat %s %s %s",
+               paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181206.tif"),
+               paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181206.tif"),
+               paste0(dd_dir,"stats.txt")
+))
 
+df <- read.table(paste0(dd_dir,"stats.txt"))[,1:2]
+names(df) <- c("class","pixels")
+res <- res(raster(paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181206.tif")))[1]
+
+df$area <- df$pixels * res * res /10000
+df
 system(sprintf("rm %s",
                paste0(dd_dir,"tmp*.tif")
 ))
