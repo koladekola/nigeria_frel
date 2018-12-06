@@ -10,6 +10,7 @@
 time_start  <- Sys.time()
 
 aoi <- paste0(nfi_dir,"eco93.shp")
+aoi_field <- "ECO93_ID"
 
 ####################################################################################
 ####### COMBINE GFC LAYERS
@@ -19,7 +20,7 @@ aoi <- paste0(nfi_dir,"eco93.shp")
 system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
                paste0(gfc_dir,"gfc_treecover2000.tif"),
                paste0(gfc_dir,"gfc_lossyear.tif"),
-               paste0(dd_dir,"tmp_gfc_2006_gt",gfc_threshold,".tif"),
+               paste0(dd_dir,"tmp_gfc_tc_start.tif"),
                paste0("(A>",gfc_threshold,")*((B==0)+(B>5))*A")
 ))
 
@@ -27,39 +28,39 @@ system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\
 system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
                paste0(gfc_dir,"gfc_treecover2000.tif"),
                paste0(gfc_dir,"gfc_lossyear.tif"),
-               paste0(dd_dir,"tmp_gfc_loss_0616_gt",gfc_threshold,".tif"),
+               paste0(dd_dir,"tmp_gfc_loss.tif"),
                paste0("(A>",gfc_threshold,")*(B>5)*(B<16)")
 ))
 
 #################### SIEVE TO THE MMU
 system(sprintf("gdal_sieve.py -st %s %s %s ",
                mmu,
-               paste0(dd_dir,"tmp_gfc_loss_0616_gt",gfc_threshold,".tif"),
-               paste0(dd_dir,"tmp_gfc_loss_0616_gt",gfc_threshold,"_fsieve.tif")
+               paste0(dd_dir,"tmp_gfc_loss.tif"),
+               paste0(dd_dir,"tmp_gfc_loss_fsieve.tif")
 ))
 
 #################### FIX THE HOLES
 system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
-               paste0(dd_dir,"tmp_gfc_loss_0616_gt",gfc_threshold,".tif"),
-               paste0(dd_dir,"tmp_gfc_loss_0616_gt",gfc_threshold,"_fsieve.tif"),
-               paste0(dd_dir,"tmp_gfc_loss_0616_gt",gfc_threshold,"_sieve.tif"),
+               paste0(dd_dir,"tmp_gfc_loss.tif"),
+               paste0(dd_dir,"tmp_gfc_loss_fsieve.tif"),
+               paste0(dd_dir,"tmp_gfc_loss_sieve.tif"),
                paste0("(A>0)*(B>0)*B")
 ))
 
 #################### DIFFERENCE BETWEEN SIEVED AND ORIGINAL
 system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
-               paste0(dd_dir,"tmp_gfc_loss_0616_gt",gfc_threshold,".tif"),
-               paste0(dd_dir,"tmp_gfc_loss_0616_gt",gfc_threshold,"_sieve.tif"),
-               paste0(dd_dir,"tmp_gfc_loss_0616_gt",gfc_threshold,"_inf.tif"),
+               paste0(dd_dir,"tmp_gfc_loss.tif"),
+               paste0(dd_dir,"tmp_gfc_loss_sieve.tif"),
+               paste0(dd_dir,"tmp_gfc_loss_inf.tif"),
                paste0("(A>0)*(A-B)+(A==0)*(B==1)*0")
 ))
 
 
 #################### CREATE GFC TREE COVER MASK IN 2016 AT THRESHOLD
 system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
-               paste0(dd_dir,"tmp_gfc_2006_gt",gfc_threshold,".tif"),
+               paste0(dd_dir,"tmp_gfc_tc_start.tif"),
                paste0(gfc_dir,"gfc_lossyear.tif"),
-               paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,".tif"),
+               paste0(dd_dir,"tmp_gfc_tc_end.tif"),
                paste0("(A>0)*((B>=16)+(B==0))")
 ))
 
@@ -67,34 +68,34 @@ system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\
 #################### SIEVE TO THE MMU
 system(sprintf("gdal_sieve.py -st %s %s %s ",
                mmu,
-               paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,".tif"),
-               paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,"_fsieve.tif")
+               paste0(dd_dir,"tmp_gfc_tc_end.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_end_fsieve.tif")
 ))
 
 #################### FIX THE HOLES
 system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
-               paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,".tif"),
-               paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,"_fsieve.tif"),
-               paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,"_sieve.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_end.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_end_fsieve.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_end_sieve.tif"),
                paste0("(A>0)*(B>0)*B")
 ))
 
 #################### DIFFERENCE BETWEEN SIEVED AND ORIGINAL
 system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
-               paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,".tif"),
-               paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,"_sieve.tif"),
-               paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,"_inf.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_end.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_end_sieve.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_end_inf.tif"),
                paste0("(A>0)*(A-B)+(A==0)*(B==1)*0")
 ))
 
 #################### COMBINATION INTO DD MAP (1==NF, 2==F, 3==Df, 4==Dg, 5==ToF, 6==Dg_TOF)
 system(sprintf("gdal_calc.py -A %s -B %s -C %s -D %s -E %s  --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
-               paste0(dd_dir,"tmp_gfc_2006_gt",gfc_threshold,".tif"),
-               paste0(dd_dir,"tmp_gfc_loss_0616_gt",gfc_threshold,"_sieve.tif"),
-               paste0(dd_dir,"tmp_gfc_loss_0616_gt",gfc_threshold,"_inf.tif"),
-               paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,"_sieve.tif"),
-               paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,"_inf.tif"),
-               paste0(dd_dir,"tmp_dd_map_0616_gt",gfc_threshold,".tif"),
+               paste0(dd_dir,"tmp_gfc_tc_start.tif"),
+               paste0(dd_dir,"tmp_gfc_loss_sieve.tif"),
+               paste0(dd_dir,"tmp_gfc_loss_inf.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_end_sieve.tif"),
+               paste0(dd_dir,"tmp_gfc_tc_end_inf.tif"),
+               paste0(dd_dir,"tmp_dd_map.tif"),
                paste0("(A==0)*1+",
                       "(A>0)*((B==0)*(C==0)*((D>0)*2+(E>0)*5)+",
                              "(B>0)*3+",
@@ -106,10 +107,9 @@ system(sprintf("gdal_calc.py -A %s -B %s -C %s -D %s -E %s  --co COMPRESS=LZW --
 system(sprintf("python %s/oft-cutline_crop.py -v %s -i %s -o %s -a %s",
                scriptdir,
                aoi,
-               #paste0(gadm_dir,"gadm_",the_country,"l1.shp"),
-               paste0(dd_dir,"tmp_dd_map_0616_gt",gfc_threshold,".tif"),
-               paste0(dd_dir,"tmp_dd_map_0616_gt",gfc_threshold,"aoi_.tif"),
-               "ECO93_ID"
+               paste0(dd_dir,"tmp_dd_map.tif"),
+               paste0(dd_dir,"tmp_dd_map_aoi.tif"),
+               aoi_field
 ))
 
 #################### CREATE A COLOR TABLE FOR THE OUTPUT MAP
@@ -131,15 +131,15 @@ write.table(pct,paste0(dd_dir,"color_table.txt"),row.names = F,col.names = F,quo
 ################################################################################
 system(sprintf("(echo %s) | oft-addpct.py %s %s",
                paste0(dd_dir,"color_table.txt"),
-               paste0(dd_dir,"tmp_dd_map_0616_gt",gfc_threshold,"aoi_.tif"),
-               paste0(dd_dir,"tmp_dd_map_0616_gt",gfc_threshold,"pct.tif")
+               paste0(dd_dir,"tmp_dd_map_aoi.tif"),
+               paste0(dd_dir,"tmp_dd_map_aoi_pct.tif")
 ))
 
 ################################################################################
 #################### COMPRESS
 ################################################################################
 system(sprintf("gdal_translate -ot Byte -co COMPRESS=LZW %s %s",
-               paste0(dd_dir,"tmp_dd_map_0616_gt",gfc_threshold,"pct.tif"),
+               paste0(dd_dir,"tmp_dd_map_aoi_pct.tif"),
                paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181206.tif")
 ))
 
