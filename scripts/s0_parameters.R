@@ -29,7 +29,6 @@ library(stringr)
 ## Set the working directory
 rootdir       <- "~/nigeria_frel/"
 gfcstore_dir  <- "~/downloads/gfc_2016/"
-esa_folder    <- "~/downloads/ESA_2016/"
 the_country   <- "NGA"
 
 setwd(rootdir)
@@ -39,24 +38,14 @@ scriptdir<- paste0(rootdir,"scripts/")
 data_dir <- paste0(rootdir,"data/")
 gadm_dir <- paste0(rootdir,"data/gadm/")
 gfc_dir  <- paste0(rootdir,"data/gfc/")
-lsat_dir <- paste0(rootdir,"data/mosaic_lsat/")
-seg_dir  <- paste0(rootdir,"data/segments/")
 dd_dir   <- paste0(rootdir,"data/dd_map/")
-lc_dir   <- paste0(rootdir,"data/forest_mask/")
-esa_dir  <- paste0(rootdir,"data/esa/")
-nfi_dir  <- paste0(rootdir,"data/nfi/")
+eco_dir  <- paste0(rootdir,"data/ecozone/")
 
 dir.create(data_dir,showWarnings = F)
 dir.create(gadm_dir,showWarnings = F)
 dir.create(gfc_dir,showWarnings = F)
-dir.create(lsat_dir,showWarnings = F)
-dir.create(seg_dir,showWarnings = F)
 dir.create(dd_dir,showWarnings = F)
-dir.create(lc_dir,showWarnings = F)
-dir.create(esa_dir,showWarnings = F)
 dir.create(gfcstore_dir,showWarnings = F)
-dir.create(esa_folder,showWarnings = F)
-dir.create(nfi_dir,showWarnings = F)
 
 #################### GFC PRODUCTS
 gfc_threshold <- 15
