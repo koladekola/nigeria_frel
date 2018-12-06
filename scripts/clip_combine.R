@@ -87,7 +87,7 @@ system(sprintf("gdal_calc.py -A %s -B %s --co COMPRESS=LZW --outfile=%s --calc=\
                paste0("(A>0)*(A-B)+(A==0)*(B==1)*0")
 ))
 
-#################### COMBINATION INTO DD MAP (1==NF, 2==F, 3==Df, 4==Dg, 5==ToF)
+#################### COMBINATION INTO DD MAP (1==NF, 2==F, 3==Df, 4==Dg, 5==ToF, 6==Dg_TOF)
 system(sprintf("gdal_calc.py -A %s -B %s -C %s -D %s -E %s  --co COMPRESS=LZW --outfile=%s --calc=\"%s\"",
                paste0(dd_dir,"tmp_gfc_2006_gt",gfc_threshold,".tif"),
                paste0(dd_dir,"tmp_gfc_loss_0616_gt",gfc_threshold,"_sieve.tif"),
@@ -95,7 +95,10 @@ system(sprintf("gdal_calc.py -A %s -B %s -C %s -D %s -E %s  --co COMPRESS=LZW --
                paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,"_sieve.tif"),
                paste0(dd_dir,"tmp_gfc_2016_gt",gfc_threshold,"_inf.tif"),
                paste0(dd_dir,"tmp_dd_map_0616_gt",gfc_threshold,".tif"),
-               paste0("(A==0)*1+(A>0)*((B==0)*(C==0)*((D>0)*2+(E>0)*5)+(B>0)*3+(C>0)*4)")
+               paste0("(A==0)*1+",
+                      "(A>0)*((B==0)*(C==0)*((D>0)*2+(E>0)*5)+",
+                             "(B>0)*3+",
+                             "(C>0)*((D>0)*4+(E>0)*6))")
 ))
 
 #############################################################
@@ -110,8 +113,8 @@ system(sprintf("python %s/oft-cutline_crop.py -v %s -i %s -o %s -a %s",
 ))
 
 #################### CREATE A COLOR TABLE FOR THE OUTPUT MAP
-my_classes <- c(0,1,2,3,4,5)
-my_colors  <- col2rgb(c("black","grey","darkgreen","red","orange","lightgreen"))
+my_classes <- c(0,1,2,3,4,5,6)
+my_colors  <- col2rgb(c("black","grey","darkgreen","red","orange","lightgreen","yellow"))
 
 pct <- data.frame(cbind(my_classes,
                         my_colors[1,],
@@ -137,7 +140,7 @@ system(sprintf("(echo %s) | oft-addpct.py %s %s",
 ################################################################################
 system(sprintf("gdal_translate -ot Byte -co COMPRESS=LZW %s %s",
                paste0(dd_dir,"tmp_dd_map_0616_gt",gfc_threshold,"pct.tif"),
-               paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,".tif")
+               paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181206.tif")
 ))
 
 
