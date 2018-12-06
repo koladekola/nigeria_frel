@@ -192,6 +192,8 @@ res <- res(raster(paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181206.tif"))
 
 df$area <- df$pixels * res * res /10000
 df
+write.csv(df,paste0(dd_dir,"map_areas.csv"),row.names = F)
+
 system(sprintf("rm %s",
                paste0(dd_dir,"tmp*.tif")
 ))
