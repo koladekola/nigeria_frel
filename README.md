@@ -6,7 +6,7 @@ They need to be run in that order:
 
 - s0_parameters.R
 
-- s1_download_gfc.R
+- s1_download_gfc_2016.R
 
 - s2_clip_combine.R
 
