@@ -12,3 +12,7 @@ They need to be run in that order:
 
 Decision tree to create activity data
 ![Alt text](/figures/nigeria_ad_decision_tree.png?raw=true "Optional Title")
+
+
+Reference samples assessed, stratification and ecozone boundaries
+![Alt text](/figures/Nigeria_activity_data_strata.png?raw=true "Optional Title")
