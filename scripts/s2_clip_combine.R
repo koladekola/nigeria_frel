@@ -174,21 +174,21 @@ system(sprintf("gdal_translate -ot Byte -co COMPRESS=LZW %s %s",
 ################################################################################
 system(sprintf("gdalwarp -t_srs EPSG:32632 -overwrite -co COMPRESS=LZW %s %s",
                paste0(dd_dir,"tmp_dd_map_aoi_pct_geo.tif"),
-               paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181206.tif")
+               paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181207.tif")
 ))
 
 ################################################################################
 #################### COMPUTE AREAS
 ################################################################################
 system(sprintf("oft-stat %s %s %s",
-               paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181206.tif"),
-               paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181206.tif"),
+               paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181207.tif"),
+               paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181207.tif"),
                paste0(dd_dir,"stats.txt")
 ))
 
 df <- read.table(paste0(dd_dir,"stats.txt"))[,1:2]
 names(df) <- c("class","pixels")
-res <- res(raster(paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181206.tif")))[1]
+res <- res(raster(paste0(dd_dir,"dd_map_0616_gt",gfc_threshold,"_20181207.tif")))[1]
 
 df$area <- df$pixels * res * res /10000
 df
